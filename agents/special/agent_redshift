@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2025 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+"""
+Special agent for monitoring Redshift Networks UCTM via REST API
+"""
+
+import sys
+import argparse
+import json
+import requests
+import urllib3
+from typing import Dict, List, Any, Optional
+
+# Disable SSL warnings if verify_ssl is disabled
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+__version__ = "1.0.0"
+
+
+class RedshiftAPI:
+    """Client for Redshift UCTM REST API"""
+
+    def __init__(self, host: str, port: int = 443, verify_ssl: bool = False, timeout: int = 10):
+        """
+        Initialize Redshift API client
+
+        Args:
+            host: Hostname or IP address of the Redshift UCTM device
+            port: HTTPS port (default: 443)
+            verify_ssl: Verify SSL certificates (default: False)
+            timeout: Request timeout in seconds (default: 10)
+        """
+        self.base_url = f"https://{host}:{port}/rs/rest"
+        self.verify_ssl = verify_ssl
+        self.timeout = timeout
+        self.session = None
+
+    def _create_session(self) -> requests.Session:
+        """Create and return a requests session"""
+        if self.session is None:
+            self.session = requests.Session()
+        return self.session
+
+    def _make_request(self, endpoint: str) -> Optional[Dict[str, Any]]:
+        """
+        Make a GET request to the API
+
+        Args:
+            endpoint: API endpoint path (without base URL)
+
+        Returns:
+            JSON response as dictionary or None on error
+        """
+        session = self._create_session()
+        url = f"{self.base_url}/{endpoint}"
+
+        try:
+            response = session.post(
+                url,
+                verify=self.verify_ssl,
+                timeout=self.timeout
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"Error fetching {endpoint}: {e}\n")
+            return None
+        except json.JSONDecodeError as e:
+            sys.stderr.write(f"Error parsing JSON from {endpoint}: {e}\n")
+            return None
+
+    def get_system_stats(self) -> Optional[Dict[str, Any]]:
+        """Get system status and statistics"""
+        return self._make_request("systemstatusandstatistics/statsandstatus")
+
+    def get_hdd_ethernet_usage(self) -> Optional[Dict[str, Any]]:
+        """Get HDD and Ethernet usage"""
+        return self._make_request("ethernet/ethernetUsage")
+
+    def get_chassis_info(self) -> Optional[Dict[str, Any]]:
+        """Get chassis information"""
+        return self._make_request("systemdevicestats/chassisInfo")
+
+    def get_processor_stats(self) -> Optional[Dict[str, Any]]:
+        """Get per-processor statistics"""
+        return self._make_request("systemdevicestats/mpstat")
+
+    def get_free_memory(self) -> Optional[Dict[str, Any]]:
+        """Get free memory information"""
+        return self._make_request("systemdevicestats/freespace")
+
+    def get_disk_space(self) -> Optional[Dict[str, Any]]:
+        """Get disk space information"""
+        return self._make_request("systemdevicestats/diskspace")
+
+    def get_uptime(self) -> Optional[Dict[str, Any]]:
+        """Get system uptime"""
+        return self._make_request("systemdevicestats/uptime")
+
+    def get_ifconfig(self, interface: str) -> Optional[Dict[str, Any]]:
+        """Get interface configuration"""
+        return self._make_request(f"systemdevicestats/ifconfig/{interface}")
+
+
+def parse_arguments(args: List[str]) -> argparse.Namespace:
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    parser.add_argument(
+        "-H", "--host",
+        required=True,
+        help="Hostname or IP address of the Redshift UCTM device"
+    )
+
+    parser.add_argument(
+        "-p", "--port",
+        type=int,
+        default=443,
+        help="HTTPS port (default: 443)"
+    )
+
+    parser.add_argument(
+        "--verify-ssl",
+        action="store_true",
+        default=False,
+        help="Verify SSL certificates (default: False)"
+    )
+
+    parser.add_argument(
+        "-t", "--timeout",
+        type=int,
+        default=10,
+        help="Request timeout in seconds (default: 10)"
+    )
+
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug output"
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}"
+    )
+
+    return parser.parse_args(args)
+
+
+def output_section(section_name: str, data: Any) -> None:
+    """
+    Output a CheckMK agent section
+
+    Args:
+        section_name: Name of the section
+        data: Data to output (will be JSON-encoded)
+    """
+    print(f"<<<redshift_{section_name}:sep(0)>>>")
+    print(json.dumps(data))
+
+
+def main(args: Optional[List[str]] = None) -> int:
+    """Main function"""
+    if args is None:
+        args = sys.argv[1:]
+
+    parsed_args = parse_arguments(args)
+
+    if parsed_args.debug:
+        sys.stderr.write(f"Connecting to Redshift UCTM at {parsed_args.host}:{parsed_args.port}\n")
+
+    # Initialize API client
+    api = RedshiftAPI(
+        host=parsed_args.host,
+        port=parsed_args.port,
+        verify_ssl=parsed_args.verify_ssl,
+        timeout=parsed_args.timeout
+    )
+
+    # Collect and output data
+    sections = {
+        "system_stats": api.get_system_stats,
+        "hdd_ethernet": api.get_hdd_ethernet_usage,
+        "chassis": api.get_chassis_info,
+        "processor": api.get_processor_stats,
+        "memory": api.get_free_memory,
+        "disk": api.get_disk_space,
+        "uptime": api.get_uptime,
+    }
+
+    for section_name, fetch_func in sections.items():
+        data = fetch_func()
+        if data is not None:
+            output_section(section_name, data)
+        elif parsed_args.debug:
+            sys.stderr.write(f"Warning: Could not fetch {section_name}\n")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
