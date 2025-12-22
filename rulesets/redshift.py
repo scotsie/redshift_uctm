@@ -89,5 +89,5 @@ rule_spec_special_agent_redshift = SpecialAgent(
     name="redshift",
     title=Title("Redshift Networks UCTM"),
     topic=Topic.CLOUD,
-    parameter_form=_parameter_form,
+    parameter_form=_parameter_form(),
 )
