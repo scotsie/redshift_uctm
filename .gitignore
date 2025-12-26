@@ -4,3 +4,10 @@ debug.log
 template/
 archive/
 .claude/
+
+# Test coverage reports
+htmlcov/
+.pytest_cache/
+test-results.xml
+test-report.md
+report.json
