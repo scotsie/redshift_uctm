@@ -1,0 +1,33 @@
+title: Redshift UCTM: Processor Statistics (Aggregate)
+agents: special
+catalog: os/kernel
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors aggregate CPU statistics across all processors on
+ Redshift Networks UCTM devices.
+
+ To make this check work you have to configure the related
+ special agent {Redshift Networks UCTM}.
+
+ The check reports CPU utilization broken down by user, system, I/O wait,
+ and idle time. It calculates total CPU utilization (100% - idle) and
+ provides detailed metrics for all CPU time categories.
+
+ Discovery parameters control whether to discover aggregate statistics,
+ individual CPU cores, or both.
+
+ Thresholds can be configured via the ruleset "Redshift UCTM Processor".
+ Default thresholds are {WARN} at 80% total utilization and {CRIT} at 90%.
+
+ I/O wait can also be monitored with separate thresholds (default {WARN}
+ at 30%, {CRIT} at 50%).
+
+discovery:
+ One service for aggregate CPU statistics is created by default if processor
+ data is available. Individual CPU core services can be discovered by
+ enabling the "individual" discovery parameter.
+
+item:
+ None for aggregate statistics. CPU core number (e.g., "0", "1", "2") for
+ individual core statistics.

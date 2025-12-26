@@ -1,0 +1,28 @@
+title: Redshift UCTM: Chassis Information
+agents: special
+catalog: os/hardware
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors chassis hardware information from Redshift Networks
+ UCTM devices including manufacturer, type, serial number, and critical
+ status indicators.
+
+ To make this check work you have to configure the related
+ special agent {Redshift Networks UCTM}.
+
+ The check monitors critical status fields including boot-up state,
+ power supply state, thermal state, and security status.
+
+ The check is {OK} if all status fields show expected values (Safe/None).
+ It transitions to {CRIT} if any status field deviates from the expected
+ value, indicating potential hardware issues.
+
+ Additional chassis details are available in the service details including
+ BIOS version, DMI information, asset tags, and physical characteristics.
+
+discovery:
+ One service is created if chassis information is available from the device.
+
+item:
+ None

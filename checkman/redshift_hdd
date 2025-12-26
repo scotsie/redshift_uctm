@@ -1,0 +1,22 @@
+title: Redshift UCTM: HDD Total Usage
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the total HDD usage on Redshift Networks UCTM devices.
+
+ To make this check work you have to configure the related
+ special agent {Redshift Networks UCTM}.
+
+ The check reports total disk space, used space, and percentage utilization
+ with standard filesystem metrics (fs_used, fs_size, fs_used_percent).
+
+ Thresholds can be configured via the ruleset "Redshift UCTM HDD Usage".
+ Default thresholds are {WARN} at 80% and {CRIT} at 90%.
+
+discovery:
+ One service is created if HDD usage data is available from the device.
+
+item:
+ None

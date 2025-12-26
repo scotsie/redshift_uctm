@@ -1,0 +1,29 @@
+title: Redshift UCTM: Memory Details
+agents: special
+catalog: os/kernel
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors detailed memory statistics from Redshift Networks
+ UCTM devices including main memory, swap space, and total available memory.
+
+ To make this check work you have to configure the related
+ special agent {Redshift Networks UCTM}.
+
+ The check reports memory usage with metrics for used and free memory
+ in main memory, swap space, and total combined memory.
+
+ Discovery parameters allow discovering aggregate memory statistics,
+ individual memory types (Mem, Swap), or both.
+
+ Thresholds can be configured via the ruleset "Redshift UCTM Memory".
+ Default thresholds are {WARN} at 80% utilization and {CRIT} at 90%.
+
+discovery:
+ One service for aggregate memory statistics is created by default if
+ memory data is available. Individual services for each memory type
+ can be discovered by enabling the "individual" discovery parameter.
+
+item:
+ None for aggregate statistics. Memory type ("Mem:", "Swap:", "Total:")
+ for individual memory type statistics.

@@ -1,0 +1,21 @@
+title: Redshift UCTM: System Uptime
+agents: special
+catalog: os/kernel
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the system uptime of Redshift Networks UCTM devices.
+
+ To make this check work you have to configure the related
+ special agent {Redshift Networks UCTM}.
+
+ The check displays the system uptime including days up, current time,
+ and load averages as reported by the device.
+
+ The check is always {OK} when uptime data is available.
+
+discovery:
+ One service is created if uptime information is available from the device.
+
+item:
+ None

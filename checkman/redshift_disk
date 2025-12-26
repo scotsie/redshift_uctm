@@ -1,0 +1,28 @@
+title: Redshift UCTM: Disk Space (Individual Filesystems)
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors individual filesystem disk space usage on Redshift
+ Networks UCTM devices.
+
+ To make this check work you have to configure the related
+ special agent {Redshift Networks UCTM}.
+
+ The check reports disk space for each mounted filesystem including total
+ space, used space, available space, and percentage utilization using
+ standard filesystem metrics (fs_used, fs_size, fs_free, fs_used_percent).
+
+ Thresholds can be configured via the ruleset "Redshift UCTM Disk Space".
+ Default thresholds are {WARN} at 80% and {CRIT} at 90%.
+
+ This check complements the "Redshift UCTM: HDD Total Usage" check which
+ monitors overall disk usage, while this check provides per-filesystem
+ granularity.
+
+discovery:
+ One service is created for each filesystem reported by the device.
+
+item:
+ The filesystem device path or mount point (e.g., "/dev/disk1", "/dev/cf1")

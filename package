@@ -5,7 +5,16 @@
     'files': {
         'agent_based': ['redshift.py', 'redshift_additional.py'],
         'agents': [],
-        'checkman': [],
+        'checkman': [
+            'redshift_system_stats',
+            'redshift_hdd',
+            'redshift_interfaces',
+            'redshift_chassis',
+            'redshift_uptime',
+            'redshift_processor',
+            'redshift_memory',
+            'redshift_disk'
+        ],
         'checks': [],
         'doc': [],
         'inventory': [],

@@ -1,0 +1,24 @@
+title: Redshift UCTM: Network Interfaces
+agents: special
+catalog: os/networking
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors network interfaces on Redshift Networks UCTM devices
+ including status, IP address, and traffic counters.
+
+ To make this check work you have to configure the related
+ special agent {Redshift Networks UCTM}.
+
+ The check reports interface status and IP address configuration.
+ Traffic metrics include RX/TX packets, errors, and dropped packets
+ (if_in_pkts, if_out_pkts, if_in_errors, if_out_errors, if_in_discards,
+ if_out_discards).
+
+ The check is always {OK} unless no data is available.
+
+discovery:
+ One service is created for each network interface discovered on the device.
+
+item:
+ The network interface name (e.g., "eth2", "eth3")
