@@ -32,8 +32,12 @@ def parse_redshift_system_stats(string_table):
     if not string_table:
         return None
     try:
-        return json.loads(string_table[0][0])
-    except (json.JSONDecodeError, IndexError):
+        data_list = json.loads(string_table[0][0])
+        # Convert list of dicts to a single dict for easier access
+        if isinstance(data_list, list):
+            return {item["type"]: item["value"] for item in data_list if "type" in item and "value" in item}
+        return data_list
+    except (json.JSONDecodeError, IndexError, KeyError):
         return None
 
 
@@ -100,7 +104,7 @@ def check_redshift_system_stats(section) -> CheckResult:
 
 check_plugin_redshift_system_stats = CheckPlugin(
     name="redshift_system_stats",
-    service_name="Redshift System Stats",
+    service_name="System Stats",
     discovery_function=discover_redshift_system_stats,
     check_function=check_redshift_system_stats,
 )
@@ -132,15 +136,14 @@ def discover_redshift_hdd(section) -> DiscoveryResult:
         yield Service()
 
 
-def check_redshift_hdd(section) -> CheckResult:
-    """Check HDD usage"""
+def check_redshift_hdd(params: Mapping[str, Any], section) -> CheckResult:
+    """Check HDD aggregate usage with configurable thresholds"""
     if not section or "HDD Usage Details" not in section:
         yield Result(state=State.UNKNOWN, summary="No HDD data")
         return
 
     hdd = section["HDD Usage Details"]
 
-    # Parse disk usage
     if "Total Space" in hdd and "Used Space" in hdd and "Used Percentage" in hdd:
         total_space = hdd["Total Space"]
         used_space = hdd["Used Space"]
@@ -148,21 +151,48 @@ def check_redshift_hdd(section) -> CheckResult:
 
         try:
             used_percent = float(used_percent_str.rstrip('%'))
-            yield Metric("disk_used_percent", used_percent)
+
+            # Parse sizes (format: "1238542 MB")
+            total_mb = float(total_space.split()[0])
+            used_mb = float(used_space.split()[0])
+
+            total_bytes = int(total_mb * 1024 * 1024)
+            used_bytes = int(used_mb * 1024 * 1024)
+
+            # Use standard filesystem metric names
+            yield Metric("fs_used", used_bytes)
+            yield Metric("fs_size", total_bytes)
+            yield Metric("fs_used_percent", used_percent)
+
+            # Check against configurable thresholds
+            levels = params.get("levels", (80, 90))
+            if isinstance(levels, tuple) and len(levels) == 2:
+                warn, crit = levels
+                if used_percent >= crit:
+                    state = State.CRIT
+                elif used_percent >= warn:
+                    state = State.WARN
+                else:
+                    state = State.OK
+            else:
+                state = State.OK
 
             yield Result(
-                state=State.OK if used_percent < 80 else State.WARN if used_percent < 90 else State.CRIT,
-                summary=f"Disk: {used_space} of {total_space} ({used_percent:.1f}%)"
+                state=state,
+                summary=f"{used_percent:.1f}% used ({render.bytes(used_bytes)} of {render.bytes(total_bytes)})"
             )
-        except ValueError:
-            yield Result(state=State.OK, summary=f"Disk: {used_space} of {total_space}")
+        except (ValueError, IndexError):
+            yield Result(state=State.OK, summary=f"{used_space} of {total_space}")
 
 
 check_plugin_redshift_hdd = CheckPlugin(
     name="redshift_hdd",
-    service_name="Redshift HDD",
+    sections=["redshift_hdd_ethernet"],
+    service_name="HDD Total",
     discovery_function=discover_redshift_hdd,
     check_function=check_redshift_hdd,
+    check_default_parameters={"levels": (80, 90)},
+    check_ruleset_name="redshift_hdd",
 )
 
 
@@ -218,7 +248,8 @@ def check_redshift_interfaces(item: str, section) -> CheckResult:
 
 check_plugin_redshift_interfaces = CheckPlugin(
     name="redshift_interfaces",
-    service_name="Redshift Interface %s",
+    sections=["redshift_hdd_ethernet"],
+    service_name="Interface %s",
     discovery_function=discover_redshift_interfaces,
     check_function=check_redshift_interfaces,
 )
@@ -256,21 +287,89 @@ def check_redshift_chassis(section) -> CheckResult:
         yield Result(state=State.UNKNOWN, summary="No chassis data")
         return
 
-    info_parts = []
+    # Helper function to get and clean values
+    def get_value(key):
+        value = section.get(key, "")
+        return str(value).strip() if value else ""
 
-    for key in ["manufacturer", "type", "version", "serialNumber"]:
+    # Determine overall state based on critical status fields
+    state = State.OK
+    not_ok_items = []
+
+    # Check critical state fields
+    status_checks = {
+        "boot_upState": "Safe",
+        "powerSupplyState": "Safe",
+        "thermalState": "Safe",
+        "securityStatus": "None"
+    }
+
+    for key, expected_value in status_checks.items():
+        actual_value = get_value(key)
+        if actual_value and actual_value != expected_value:
+            state = State.CRIT
+            not_ok_items.append(f"{key}: {actual_value}")
+
+    # Build summary with type, manufacturer, serialNumber, and any not OK items
+    summary_parts = []
+
+    chassis_type = get_value("type")
+    if chassis_type:
+        summary_parts.append(f"Type: {chassis_type}")
+
+    manufacturer = get_value("manufacturer")
+    if manufacturer:
+        summary_parts.append(f"Manufacturer: {manufacturer}")
+
+    serial = get_value("serialNumber")
+    if serial:
+        summary_parts.append(f"S/N: {serial}")
+
+    # Add any not OK items to summary
+    if not_ok_items:
+        summary_parts.append("Issues: " + ", ".join(not_ok_items))
+
+    summary = ", ".join(summary_parts) if summary_parts else "Chassis info available"
+
+    # Build details with all fields
+    details_parts = []
+
+    # Map of all keys to display labels for details
+    detail_labels = {
+        "info": "Info",
+        "smbios": "SMBIOS",
+        "DMI": "DMI",
+        "handle": "Handle",
+        "manufacturer": "Manufacturer",
+        "type": "Type",
+        "lock": "Lock",
+        "version": "Version",
+        "serialNumber": "Serial Number",
+        "assetTag": "Asset Tag",
+        "boot_upState": "Boot-up State",
+        "powerSupplyState": "Power Supply State",
+        "thermalState": "Thermal State",
+        "securityStatus": "Security Status",
+        "OEMInformation": "OEM Information",
+        "height": "Height",
+        "numberOfPowerCords": "Number of Power Cords",
+        "containedElements": "Contained Elements"
+    }
+
+    for key, label in detail_labels.items():
         if key in section:
-            info_parts.append(f"{key.title()}: {section[key]}")
+            value = get_value(key)
+            if value:
+                details_parts.append(f"{label}: {value}")
 
-    if info_parts:
-        yield Result(state=State.OK, summary=", ".join(info_parts))
-    else:
-        yield Result(state=State.OK, summary="Chassis info available")
+    details = "\n".join(details_parts) if details_parts else "No details available"
+
+    yield Result(state=state, summary=summary, details=details)
 
 
 check_plugin_redshift_chassis = CheckPlugin(
     name="redshift_chassis",
-    service_name="Redshift Chassis Info",
+    service_name="Chassis Info",
     discovery_function=discover_redshift_chassis,
     check_function=check_redshift_chassis,
 )
@@ -304,17 +403,22 @@ def discover_redshift_uptime(section) -> DiscoveryResult:
 
 def check_redshift_uptime(section) -> CheckResult:
     """Check system uptime"""
-    if not section or "Value" not in section:
+    if not section:
         yield Result(state=State.UNKNOWN, summary="No uptime data")
         return
 
-    uptime_str = section["Value"]
+    # Handle both "value" and "Value" keys
+    uptime_str = section.get("value") or section.get("Value")
+    if not uptime_str:
+        yield Result(state=State.UNKNOWN, summary="No uptime data")
+        return
+
     yield Result(state=State.OK, summary=f"Uptime: {uptime_str}")
 
 
 check_plugin_redshift_uptime = CheckPlugin(
     name="redshift_uptime",
-    service_name="Redshift Uptime",
+    service_name="Uptime",
     discovery_function=discover_redshift_uptime,
     check_function=check_redshift_uptime,
 )
