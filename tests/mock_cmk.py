@@ -6,7 +6,7 @@ Mock CheckMK modules for testing in CI environments without full CheckMK install
 
 from enum import IntEnum
 from typing import Any, NamedTuple
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 
 
 # Mock cmk.agent_based.v2
@@ -113,3 +113,8 @@ class RuleSetType(IntEnum):
     """Ruleset type"""
     MERGED = 1
     ALL = 2
+
+
+# Type aliases used by CheckMK
+CheckResult = Generator[Result | Metric, None, None]
+DiscoveryResult = Generator[Service, None, None]
