@@ -65,12 +65,37 @@ class RedshiftAPI:
                 timeout=self.timeout
             )
             response.raise_for_status()
-            return response.json()
+
+            # Save raw text before attempting to parse
+            raw_text = response.text
+
+            # Try to parse as JSON
+            try:
+                return json.loads(raw_text)
+            except json.JSONDecodeError as e:
+                # Try to clean up common JSON issues from Redshift API
+                import re
+                # Remove trailing commas before closing braces/brackets
+                cleaned_text = re.sub(r',\s*}', '}', raw_text)
+                cleaned_text = re.sub(r',\s*]', ']', cleaned_text)
+                # Remove leading commas after opening brackets (invalid JSON from Redshift API)
+                cleaned_text = re.sub(r'\[\s*,', '[', cleaned_text)
+                # Remove leading commas after opening braces
+                cleaned_text = re.sub(r'\{\s*,', '{', cleaned_text)
+
+                try:
+                    # If cleaning worked, return the parsed result silently
+                    return json.loads(cleaned_text)
+                except json.JSONDecodeError as e2:
+                    # Only log if cleaning also failed
+                    sys.stderr.write(f"Error fetching {endpoint}: {e}\n")
+                    sys.stderr.write(f"Raw response (first 500 chars): {raw_text[:500]}\n")
+                    sys.stderr.write(f"Failed to clean JSON: {e2}\n")
+                    return None
+
         except requests.exceptions.RequestException as e:
+            # Only show errors in stderr, CheckMK will handle missing sections gracefully
             sys.stderr.write(f"Error fetching {endpoint}: {e}\n")
-            return None
-        except json.JSONDecodeError as e:
-            sys.stderr.write(f"Error parsing JSON from {endpoint}: {e}\n")
             return None
 
     def get_system_stats(self) -> Optional[Dict[str, Any]]:
