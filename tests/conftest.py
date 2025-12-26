@@ -12,6 +12,27 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+# Mock CheckMK modules if not available (for CI environments)
+try:
+    import cmk.agent_based.v2
+except ImportError:
+    # CheckMK not installed, use mocks
+    from tests import mock_cmk
+    sys.modules['cmk'] = type(sys)('cmk')
+    sys.modules['cmk.agent_based'] = type(sys)('cmk.agent_based')
+    sys.modules['cmk.agent_based.v1'] = type(sys)('cmk.agent_based.v1')
+    sys.modules['cmk.agent_based.v2'] = mock_cmk
+    sys.modules['cmk.agent_based.v1.register'] = mock_cmk
+    sys.modules['cmk.server_side_calls'] = type(sys)('cmk.server_side_calls')
+    sys.modules['cmk.server_side_calls.v1'] = mock_cmk
+
+    # Populate the mock modules with classes
+    for attr in dir(mock_cmk):
+        if not attr.startswith('_'):
+            setattr(sys.modules['cmk.agent_based.v2'], attr, getattr(mock_cmk, attr))
+            setattr(sys.modules['cmk.server_side_calls.v1'], attr, getattr(mock_cmk, attr))
+            setattr(sys.modules['cmk.agent_based.v1.register'], attr, getattr(mock_cmk, attr))
+
 
 @pytest.fixture
 def sample_system_stats_json():

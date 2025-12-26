@@ -4,6 +4,10 @@
 
 This project includes a comprehensive test suite with **95 tests** achieving **88% code coverage** across all components.
 
+**✨ Works in both local development (with CheckMK) and CI/CD (without CheckMK)!**
+
+See [tests/CI_TESTING.md](tests/CI_TESTING.md) for details on how tests run in GitHub Actions.
+
 ## Quick Start
 
 ```bash
