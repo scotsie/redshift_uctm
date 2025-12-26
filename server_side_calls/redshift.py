@@ -13,7 +13,6 @@ from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -23,7 +22,7 @@ class RedshiftParams(BaseModel):
     """Parameters for Redshift UCTM special agent"""
     host: str | None = None
     port: int = 443
-    verify_ssl: bool = False
+    verify_ssl: str = "no_verify"
     timeout: int = 10
 
 
@@ -45,7 +44,7 @@ def generate_redshift_command(
         str(params.timeout),
     ]
 
-    if params.verify_ssl:
+    if params.verify_ssl == "verify":
         args.append("--verify-ssl")
 
     yield SpecialAgentCommand(command_arguments=args)
