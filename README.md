@@ -2,7 +2,7 @@
 
 ## Description
 
-This CheckMK 2.3 extension provides monitoring for Redshift Networks UCTM (Unified Communications Threat Management) systems via their REST API.
+This CheckMK 2.3 > extension provides monitoring for Redshift Networks UCTM (Unified Communications Threat Management) systems via their REST API.
 
 ## Features
 
@@ -32,7 +32,13 @@ The extension monitors the following metrics from Redshift UCTM devices:
 
 ## Development
 
+I can't take credit for this setup as I used this template by [jiuka](https://github\.com/jiuka/checkmk_template/workflows) to start learning to develop locally using the opensource build of CheckMK.
+
+Also a word of appreciation to [Yogibaer75](https://github.com/Yogibaer75) for his publicly available plugins for 2.3.0pXX releases to help fill in gaps in the documentation (which is good but for a novice like me, still somewhat confusing).
+
 For development, use [VSCode](https://code.visualstudio.com/) with the [Remote Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension. This maps your workspace into a CheckMK docker container.
+
+
 
 ## API Reference
 
