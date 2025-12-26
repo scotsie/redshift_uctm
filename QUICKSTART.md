@@ -110,9 +110,11 @@ redshift_uctm/
 ├── agent_based/        - Check plugins
 ├── server_side_calls/  - Agent configuration
 ├── libexec/           - Special agent script
+├── rulesets/          - Configuration UI
+├── checkman/          - Check manual pages
 ├── tests/             - 95 tests, 88% coverage
-├── .github/           - CI/CD workflows
-└── rulesets/          - Configuration UI
+├── reference/         - API documentation
+└── .github/           - CI/CD workflows
 ```
 
 ### Commands

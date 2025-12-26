@@ -74,8 +74,8 @@ redshift_uctm/
 │   └── agent_redshift
 ├── rulesets/            # WATO rulesets for configuration
 ├── checkman/            # Check manual pages
-├── web/                 # Web GUI components
 ├── tests/               # Comprehensive test suite (95 tests, 88% coverage)
+├── reference/           # API documentation
 └── package              # Package metadata
 ```
 

@@ -191,10 +191,10 @@ redshift_uctm/
 │   └── redshift_common.py
 ├── server_side_calls/      # Special agent configuration
 ├── libexec/               # Special agent executable
-├── tests/                 # Test suite
 ├── rulesets/             # WATO configuration
 ├── checkman/             # Manual pages
-└── web/                  # Web GUI components
+├── tests/                # Test suite (95 tests, 88% coverage)
+└── reference/            # API documentation
 ```
 
 ## Adding New Monitoring Features
