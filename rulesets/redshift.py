@@ -60,15 +60,15 @@ def _parameter_form() -> Dictionary:
                     ),
                     elements=[
                         SingleChoiceElement(
-                            name=False,
+                            name="no_verify",
                             title=Title("Do not verify SSL certificate (default)"),
                         ),
                         SingleChoiceElement(
-                            name=True,
+                            name="verify",
                             title=Title("Verify SSL certificate"),
                         ),
                     ],
-                    prefill=DefaultValue(False),
+                    prefill=DefaultValue("no_verify"),
                 ),
                 required=True,
             ),
@@ -89,5 +89,5 @@ rule_spec_special_agent_redshift = SpecialAgent(
     name="redshift",
     title=Title("Redshift Networks UCTM"),
     topic=Topic.CLOUD,
-    parameter_form=_parameter_form(),
+    parameter_form=_parameter_form,
 )
