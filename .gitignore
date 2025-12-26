@@ -2,5 +2,5 @@
 __pycache__
 debug.log
 template/
-reference/
 archive/
+.claude/
