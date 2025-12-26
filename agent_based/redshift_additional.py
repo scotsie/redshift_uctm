@@ -22,6 +22,8 @@ from cmk.agent_based.v2 import (
     render,
 )
 
+from .redshift_common import parse_json_section
+
 
 # ============================================================================
 # Processor Statistics Section
@@ -29,12 +31,7 @@ from cmk.agent_based.v2 import (
 
 def parse_redshift_processor(string_table):
     """Parse processor statistics section"""
-    if not string_table:
-        return None
-    try:
-        return json.loads(string_table[0][0])
-    except (json.JSONDecodeError, IndexError):
-        return None
+    return parse_json_section(string_table)
 
 
 agent_section_redshift_processor = AgentSection(
@@ -258,12 +255,7 @@ check_plugin_redshift_processor_core = CheckPlugin(
 
 def parse_redshift_memory(string_table):
     """Parse memory section"""
-    if not string_table:
-        return None
-    try:
-        return json.loads(string_table[0][0])
-    except (json.JSONDecodeError, IndexError):
-        return None
+    return parse_json_section(string_table)
 
 
 agent_section_redshift_memory = AgentSection(
@@ -350,12 +342,7 @@ check_plugin_redshift_memory = CheckPlugin(
 
 def parse_redshift_disk(string_table):
     """Parse disk space section"""
-    if not string_table:
-        return None
-    try:
-        return json.loads(string_table[0][0])
-    except (json.JSONDecodeError, IndexError):
-        return None
+    return parse_json_section(string_table)
 
 
 agent_section_redshift_disk = AgentSection(

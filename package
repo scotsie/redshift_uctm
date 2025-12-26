@@ -3,7 +3,7 @@
     'description': u'Monitoring extension for Redshift Networks UCTM via REST API',
     'download_url': '',
     'files': {
-        'agent_based': ['redshift.py', 'redshift_additional.py'],
+        'agent_based': ['redshift.py', 'redshift_additional.py', 'redshift_common.py'],
         'agents': [],
         'checkman': [
             'redshift_system_stats',

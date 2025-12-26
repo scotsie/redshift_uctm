@@ -11,6 +11,7 @@ Special agent for monitoring Redshift Networks UCTM via REST API
 import sys
 import argparse
 import json
+import re
 import requests
 import urllib3
 from typing import Dict, List, Any, Optional
@@ -74,7 +75,6 @@ class RedshiftAPI:
                 return json.loads(raw_text)
             except json.JSONDecodeError as e:
                 # Try to clean up common JSON issues from Redshift API
-                import re
                 # Remove trailing commas before closing braces/brackets
                 cleaned_text = re.sub(r',\s*}', '}', raw_text)
                 cleaned_text = re.sub(r',\s*]', ']', cleaned_text)

@@ -22,6 +22,8 @@ from cmk.agent_based.v2 import (
     render,
 )
 
+from .redshift_common import parse_json_section
+
 
 # ============================================================================
 # System Statistics Section
@@ -116,12 +118,7 @@ check_plugin_redshift_system_stats = CheckPlugin(
 
 def parse_redshift_hdd_ethernet(string_table):
     """Parse HDD and Ethernet usage section"""
-    if not string_table:
-        return None
-    try:
-        return json.loads(string_table[0][0])
-    except (json.JSONDecodeError, IndexError):
-        return None
+    return parse_json_section(string_table)
 
 
 agent_section_redshift_hdd_ethernet = AgentSection(
@@ -261,12 +258,7 @@ check_plugin_redshift_interfaces = CheckPlugin(
 
 def parse_redshift_chassis(string_table):
     """Parse chassis information section"""
-    if not string_table:
-        return None
-    try:
-        return json.loads(string_table[0][0])
-    except (json.JSONDecodeError, IndexError):
-        return None
+    return parse_json_section(string_table)
 
 
 agent_section_redshift_chassis = AgentSection(
@@ -381,12 +373,7 @@ check_plugin_redshift_chassis = CheckPlugin(
 
 def parse_redshift_uptime(string_table):
     """Parse uptime section"""
-    if not string_table:
-        return None
-    try:
-        return json.loads(string_table[0][0])
-    except (json.JSONDecodeError, IndexError):
-        return None
+    return parse_json_section(string_table)
 
 
 agent_section_redshift_uptime = AgentSection(
