@@ -1,6 +1,6 @@
-*.mkp
 .coverage
 __pycache__
 debug.log
 template/
 reference/
+archive/

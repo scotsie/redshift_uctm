@@ -1,7 +1,7 @@
 {
-    'author': u'Scott Crace (<mscottcrace@gmail.com>)',
+    'author': u'Scott Crace (mscottcrace@gmail.com)',
     'description': u'Monitoring extension for Redshift Networks UCTM via REST API',
-    'download_url': '',
+    'download_url': 'https://github.com/scotsie/redshift_uctm',
     'files': {
         'cmk_addons_plugins': [
             'redshift_uctm/agent_based/redshift.py',
@@ -23,8 +23,8 @@
     },
     'name': 'redshift_uctm',
     'title': u'Redshift Networks UCTM Monitoring',
-    'version': '2.3.1',
+    'version': '2.3.2',
     'version.min_required': '2.3.0',
     'version.packaged': '2.3.0',
-    'version.usable_until': '2.4.0',
+    'version.usable_until': '2.5.0',
 }
