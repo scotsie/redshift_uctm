@@ -1,0 +1,84 @@
+name: build
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-mkp:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Extract package info
+      id: package_info
+      run: |
+        NAME=$(python3 -c 'print(eval(open("package").read())["name"])')
+        VERSION=$(python3 -c 'print(eval(open("package").read())["version"])')
+        echo "name=$NAME" >> $GITHUB_OUTPUT
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Package: $NAME v$VERSION"
+
+    - name: Validate package structure
+      run: |
+        echo "Validating package structure..."
+
+        # Check required files exist
+        test -f package || { echo "Missing package file"; exit 1; }
+        test -d agent_based || { echo "Missing agent_based directory"; exit 1; }
+
+        # Check Python syntax
+        python3 -m py_compile agent_based/*.py
+        python3 -m py_compile server_side_calls/*.py
+
+        echo "✓ Package structure is valid"
+
+    - name: Set up CheckMK build environment
+      run: |
+        # Note: This is a simplified build check
+        # In a real scenario, you'd use the CheckMK container
+        echo "Package would be built: ${{ steps.package_info.outputs.name }}-${{ steps.package_info.outputs.version }}.mkp"
+        echo "Build environment ready"
+
+    - name: Create package artifact
+      run: |
+        # Create a simulated package for artifact upload
+        # In production, this would run the actual mkp package command
+        mkdir -p build
+        tar czf build/${{ steps.package_info.outputs.name }}-${{ steps.package_info.outputs.version }}.tar.gz \
+          package \
+          agent_based/ \
+          server_side_calls/ \
+          libexec/ \
+          checkman/ \
+          rulesets/ \
+          web/
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: mkp-package-${{ steps.package_info.outputs.version }}
+        path: build/*.tar.gz
+        retention-days: 30
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/*.tar.gz
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
