@@ -172,6 +172,12 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--sections",
+        type=str,
+        help="Comma-separated list of sections to collect (default: all)"
+    )
+
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}"
@@ -211,7 +217,7 @@ def main(args: Optional[List[str]] = None) -> int:
     )
 
     # Collect and output data
-    sections = {
+    all_sections = {
         "system_stats": api.get_system_stats,
         "hdd_ethernet": api.get_hdd_ethernet_usage,
         "chassis": api.get_chassis_info,
@@ -220,6 +226,15 @@ def main(args: Optional[List[str]] = None) -> int:
         "disk": api.get_disk_space,
         "uptime": api.get_uptime,
     }
+
+    # Filter sections based on --sections argument
+    if parsed_args.sections:
+        enabled_sections = [s.strip() for s in parsed_args.sections.split(",")]
+        sections = {k: v for k, v in all_sections.items() if k in enabled_sections}
+        if parsed_args.debug:
+            sys.stderr.write(f"Collecting sections: {', '.join(sections.keys())}\n")
+    else:
+        sections = all_sections
 
     for section_name, fetch_func in sections.items():
         data = fetch_func()

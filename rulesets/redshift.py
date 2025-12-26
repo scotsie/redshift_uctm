@@ -14,6 +14,8 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     Integer,
+    MultipleChoice,
+    MultipleChoiceElement,
     SingleChoice,
     SingleChoiceElement,
     String,
@@ -80,6 +82,56 @@ def _parameter_form() -> Dictionary:
                     custom_validate=(validators.NumberInRange(min_value=1, max_value=300),),
                 ),
                 required=True,
+            ),
+            "sections": DictElement(
+                parameter_form=MultipleChoice(
+                    title=Title("Sections to collect"),
+                    help_text=Help(
+                        "Select which data sections to collect from the Redshift UCTM device. "
+                        "By default, all sections are collected. Deselect sections you don't need "
+                        "to reduce API calls and improve performance."
+                    ),
+                    elements=[
+                        MultipleChoiceElement(
+                            name="system_stats",
+                            title=Title("System Statistics (memory, CPU, license)"),
+                        ),
+                        MultipleChoiceElement(
+                            name="hdd_ethernet",
+                            title=Title("HDD and Ethernet Usage"),
+                        ),
+                        MultipleChoiceElement(
+                            name="chassis",
+                            title=Title("Chassis Information"),
+                        ),
+                        MultipleChoiceElement(
+                            name="processor",
+                            title=Title("Processor Statistics"),
+                        ),
+                        MultipleChoiceElement(
+                            name="memory",
+                            title=Title("Memory Details"),
+                        ),
+                        MultipleChoiceElement(
+                            name="disk",
+                            title=Title("Disk Space"),
+                        ),
+                        MultipleChoiceElement(
+                            name="uptime",
+                            title=Title("System Uptime"),
+                        ),
+                    ],
+                    prefill=DefaultValue([
+                        "system_stats",
+                        "hdd_ethernet",
+                        "chassis",
+                        "processor",
+                        "memory",
+                        "disk",
+                        "uptime",
+                    ]),
+                ),
+                required=False,
             ),
         },
     )

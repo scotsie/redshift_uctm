@@ -24,6 +24,7 @@ class RedshiftParams(BaseModel):
     port: int = 443
     verify_ssl: str = "no_verify"
     timeout: int = 10
+    sections: list[str] | None = None
 
 
 def generate_redshift_command(
@@ -46,6 +47,11 @@ def generate_redshift_command(
 
     if params.verify_ssl == "verify":
         args.append("--verify-ssl")
+
+    # Add sections if specified
+    if params.sections:
+        args.append("--sections")
+        args.append(",".join(params.sections))
 
     yield SpecialAgentCommand(command_arguments=args)
 
