@@ -3,16 +3,17 @@
     'description': u'Monitoring extension for Redshift Networks UCTM via REST API',
     'download_url': '',
     'files': {
-        'agent_based': ['redshift.py'],
-        'agents': ['special/agent_redshift'],
+        'agent_based': ['redshift.py', 'redshift_additional.py'],
+        'agents': [],
         'checkman': [],
         'checks': [],
         'doc': [],
         'inventory': [],
+        'libexec': ['agent_redshift'],
         'notifications': [],
         'pnp-templates': [],
         'server_side_calls': ['redshift.py'],
-        'rulesets': ['redshift.py']
+        'rulesets': ['redshift.py', 'redshift_params.py']
     },
     'name': 'redshift',
     'title': u'Redshift Networks UCTM Monitoring',
