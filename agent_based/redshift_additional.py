@@ -233,7 +233,7 @@ check_plugin_redshift_processor = CheckPlugin(
     discovery_default_parameters={"aggregate": True, "individual": False},
     check_function=check_redshift_processor,
     check_default_parameters={"util": (80, 90)},
-    check_ruleset_name="redshift_cpu",
+    check_ruleset_name="redshift_cpu_aggregate",
 )
 
 
@@ -245,7 +245,7 @@ check_plugin_redshift_processor_core = CheckPlugin(
     discovery_default_parameters={"aggregate": True, "individual": False},
     check_function=check_redshift_processor_core,
     check_default_parameters={"util": (80, 90)},
-    check_ruleset_name="redshift_cpu",
+    check_ruleset_name="redshift_cpu_core",
 )
 
 
